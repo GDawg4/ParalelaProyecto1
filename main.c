@@ -8,14 +8,14 @@
 #define T0 20.0
 #define TL 100.0
 #define TR 100.0
-#define ERR 0.01
+#define ERR 0.001
 #define N 1000
 #define C 1e-5
 #define DELTAT 1
 #define DELTAX 0.02
 
-void print(double arrayToPrint[]) {
-	for (int i = 0; i < N; i++){
+void print(int n, double arrayToPrint[]) {
+	for (int i = 0; i < n; i++){
 		printf("%f\n", arrayToPrint[i]);
 	}
 	return;
@@ -27,8 +27,16 @@ double newTemp(double previousTj, double currentTj, double nextTj){
 	return newValue;
 }
 
+double checkPrecisionRequired(int n, double array[]){
+	double diff = 0;
+	for(int i = 1; i<n-1; i++){
+		diff = diff + abs(array[i] - array[i - 1]);
+	}
+	return diff/n;
+}
+
 int main(int argc, char* argv[]) {
-	int err = ERR;
+	double err = ERR;
 	int n = N;
 	if(argc > 5) {
 		err = strtol(argv[1], NULL, 10);
@@ -56,7 +64,7 @@ int main(int argc, char* argv[]) {
 		}
 	}	
 
-	for(int i = 0; i<1000000; i++){
+	while(checkPrecisionRequired(n, answer) > err) {
 		for(int j = 1; j<n-1; j++){
 			temp[j] = newTemp(answer[j-1], answer[j], answer[j+1]);
 		}
@@ -67,5 +75,5 @@ int main(int argc, char* argv[]) {
 		//print(answer);
 	}
 	printf("Final values\n");
-	print(answer);
+	print(n, answer);
 }
