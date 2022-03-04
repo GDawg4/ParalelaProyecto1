@@ -28,20 +28,39 @@ double newTemp(double previousTj, double currentTj, double nextTj){
 }
 
 int main(int argc, char* argv[]) {
-	double answer[N];
-	double temp[N];
-	answer[0] = TL;
-	answer[N-1] = TR;
-	temp[0] = TL;
-	temp[N-1] = TR;
-	for (int temp1 = 1; temp1<N-1; temp1++){
-		answer[temp1] = T0;
+	int err = ERR;
+	int n = N;
+	if(argc > 5) {
+		err = strtol(argv[1], NULL, 10);
+		n = strtol(argv[2], NULL, 10);
 	}
+	
+	double answer[n];
+	double temp[n];
+
+	if(argc > 5) {
+		answer[0] = strtol(argv[4], NULL, 10);
+		answer[N-1] = strtol(argv[5], NULL, 10);
+		temp[0] = strtol(argv[4], NULL, 10);
+		temp[N-1] = strtol(argv[5], NULL, 10);
+		for (int temp1 = 1; temp1<N-1; temp1++){
+			answer[temp1] = strtol(argv[3], NULL, 10);
+		}
+  	} else {
+		answer[0] = TL;
+		answer[N-1] = TR;
+		temp[0] = TL;
+		temp[N-1] = TR;
+		for (int temp1 = 1; temp1<N-1; temp1++){
+			answer[temp1] = T0;
+		}
+	}	
+
 	for(int i = 0; i<1000000; i++){
-		for(int j = 1; j<N-1; j++){
+		for(int j = 1; j<n-1; j++){
 			temp[j] = newTemp(answer[j-1], answer[j], answer[j+1]);
 		}
-		for (int k = 1; k < N-1; k++){
+		for (int k = 1; k < n-1; k++){
 			answer[k] = temp[k];
 		}
 		//printf("New values\n");
