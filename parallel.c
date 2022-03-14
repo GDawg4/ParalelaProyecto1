@@ -105,7 +105,7 @@ int main(int argc, char* argv[]) {
 	for (int i=1; i<N-1; i++){
 		answer[i] = T0;
 	}
-	
+
 	int converges = 0;
 	while(!converges) {
 		for(int j = 1; j<N-1; j++){
@@ -150,9 +150,11 @@ double check_convergence(int n, double temp[], double answer[]){
 	double diff = 0.0;
 	double max_diff = 0.0;
 
+    #pragma omp parallel for
 	for(int i = 1; i<N-1; i++){
 		diff = fabs(temp[i] - answer[i]);
 		if (diff > max_diff)
+            #pragma omp atomic
 			max_diff = diff;
 	}
 
