@@ -22,7 +22,7 @@
 #include <omp.h>
 
 #define DEFAULT_ERR 0.001
-#define DEFAULT_N 1000
+#define DEFAULT_N 10000
 #define DEFAULT_T0 20.0
 #define DEFAULT_TL 100.0
 #define DEFAULT_TR 70.0
@@ -108,6 +108,7 @@ int main(int argc, char* argv[]) {
 
 	int converges = 0;
 	while(!converges) {
+        #pragma omp parallel for shared(answer, temp)
 		for(int j = 1; j<N-1; j++){
 			temp[j] = newTemp(answer[j-1], answer[j], answer[j+1]);
 		}
@@ -150,12 +151,13 @@ double check_convergence(int n, double temp[], double answer[]){
 	double diff = 0.0;
 	double max_diff = 0.0;
 
-    #pragma omp parallel for
+    #pragma omp parallel for shared(max_diff) private(diff)
 	for(int i = 1; i<N-1; i++){
 		diff = fabs(temp[i] - answer[i]);
-		if (diff > max_diff)
-            #pragma omp atomic
-			max_diff = diff;
+		if (diff > max_diff) {
+            #pragma omp critical
+            max_diff = diff;
+        }
 	}
 
 	if (max_diff < err) {

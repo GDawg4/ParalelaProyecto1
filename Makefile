@@ -1,5 +1,7 @@
 CC = gcc
 
+all: main parallel
+
 main: main.c
 	$(CC) -o main main.c -fopenmp
 

@@ -22,7 +22,7 @@
 #include <omp.h>
 
 #define DEFAULT_ERR 0.001
-#define DEFAULT_N 1000
+#define DEFAULT_N 10000
 #define DEFAULT_T0 20.0
 #define DEFAULT_TL 100.0
 #define DEFAULT_TR 70.0
