@@ -21,11 +21,11 @@
 #include <string.h>
 #include <omp.h>
 
-#define DEFAULT_ERR 0.001
+#define DEFAULT_ERR 0.0001
 #define DEFAULT_N 10000
 #define DEFAULT_T0 20.0
 #define DEFAULT_TL 100.0
-#define DEFAULT_TR 70.0
+#define DEFAULT_TR 40.0
 
 #define L 100
 #define c 1e-5

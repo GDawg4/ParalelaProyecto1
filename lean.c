@@ -2,7 +2,7 @@
  * Universidad del Valle de Guatemala
  * Computación Paralela y Distribuida
  * Proyecto 1
- * Rodrigo Garoz
+ * Rodrigo Garoz 18102
  * Jose Miguel Castañeda
  * Douglas de León Molina
  * 
@@ -34,6 +34,7 @@
 #define DELTAX 0.02
 #define TESTING 1
 
+int thread_count = 8;
 
 double err = DEFAULT_ERR;
 int N = DEFAULT_N;
@@ -42,7 +43,7 @@ double TL = DEFAULT_TL;
 double TR = DEFAULT_TR;
 double dx;
 double dt;
-
+double used_factor;
 
 void print(int n, double arrayToPrint[]);
 
@@ -50,6 +51,16 @@ double newTemp(double previousTj, double currentTj, double nextTj);
 
 double check_convergence(int n, double temp[], double answer[]);
 
+double max(double A[], double B[], int i, int j)
+{
+    double max_val = A[0]-B[0];
+    int idx;
+    #pragma omp parallel for schedule (static) num_threads(thread_count) shared(A, B) private(idx) reduction(max:max_val)
+    for (idx = i; idx < j; ++idx)
+       max_val = max_val > fabs(A[idx]-B[idx]) ? max_val : fabs(A[idx]-B[idx]);
+
+    return max_val;
+}
 
 int main(int argc, char* argv[]) {
 	double start_t;
@@ -80,12 +91,11 @@ int main(int argc, char* argv[]) {
 			scanf("%lf", &TR);
 		}
 	}
-
 	start_t = omp_get_wtime();
 
 	dx = (double)L / (double)N;
 	dt = (C * dx * dx) / c;
-
+	used_factor = (c*dt)/(dx*dx);
 	printf("err: %lf\n", err);
 	printf("N: %d\n", N);
 	printf("T0: %lf\n", T0);
@@ -93,73 +103,40 @@ int main(int argc, char* argv[]) {
 	printf("TR: %lf\n", TR);
 	printf("dx: %lf\n", dx);
 	printf("dt: %lf\n", dt);
-	
+
 	double answer[N];
 	double temp[N];
-
-	// initialize array values
+	int N1 = N-1;
 	answer[0] = TL;
 	answer[N-1] = TR;
 	temp[0] = TL;
 	temp[N-1] = TR;
-	for (int i=1; i<N-1; i++){
-		answer[i] = T0;
+	int i1;
+	#pragma omp parallel for shared (answer) private(i1) schedule(static) num_threads(thread_count)
+	for (i1=1; i1<N1; ++i1){
+		answer[i1] = T0;
 	}
-	
+
 	int converges = 0;
+	int j1;
+	double max_val = 0.0;
 	while(!converges) {
-		for(int j = 1; j<N-1; j++){
-			temp[j] = newTemp(answer[j-1], answer[j], answer[j+1]);
+		#pragma omp parallel for num_threads(thread_count) private(j1) shared(temp, answer)
+		for(j1 = 1; j1<N1; ++j1){
+			temp[j1] = (1-2*used_factor)*answer[j1] + used_factor*(answer[j1-1] + answer[j1+1]);
 		}
-		converges = check_convergence(N, temp, answer);
+
+		converges = max(answer, temp, 1, N1) < err ? 1 : 0;
 
 		memcpy( answer, temp, sizeof(answer) );
 	}
-
-	// printf("Final values\n");
-	// print(N, answer);
 	printf("%lf, %lf, %lf, ..., ", answer[0], answer[1], answer[2]);
-    printf("%lf, %lf, %lf, ..., ", answer[N/2], answer[N/2 +1], answer[N/2 +2]);
-    printf("%lf, %lf, %lf\n", answer[N-3], answer[N-2], answer[N-1]);
+    	printf("%lf, %lf, %lf, ..., ", answer[N/2], answer[N/2 +1], answer[N/2 +2]);
+    	printf("%lf, %lf, %lf\n", answer[N-3], answer[N-2], answer[N-1]);
 
 	end_t = omp_get_wtime();
 
 	printf("Elapsed time: %f\n", (end_t - start_t));
 
 	return 0;
-}
-
-
-void print(int n, double arrayToPrint[]) {
-	for (int i = 0; i < n; i++){
-		printf("%lf ", arrayToPrint[i]);
-	}
-	printf("\n");
-	return;
-}
-
-
-double newTemp(double previousTj, double currentTj, double nextTj){
-	double newValue = currentTj + (c*dt/(dx*dx))*(previousTj - 2*currentTj + nextTj);
-	//printf("%f - %f - %f\n", previousTj, currentTj, nextTj);
-	return newValue;
-}
-
-
-double check_convergence(int n, double temp[], double answer[]){
-	double diff = 0.0;
-	double max_diff = 0.0;
-
-	for(int i = 1; i<N-1; i++){
-		diff = fabs(temp[i] - answer[i]);
-		if (diff > max_diff)
-			max_diff = diff;
-	}
-
-	if (max_diff < err) {
-		printf("max diff: %lf\n", max_diff);
-		return 1;
-	} 
-	else
-		return 0;
 }
